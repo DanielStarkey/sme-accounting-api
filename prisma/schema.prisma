@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  distance Decimal?
+  invoice  Invoice[]
+}
+
+model Invoice {
+  id                 String   @id @default(cuid())
+  client             Client   @relation(fields: [client_id], references: [id])
+  client_id          String
+  date               DateTime
+  amount             Decimal
+  distance_travelled Decimal
+  tags               String[]
+}
