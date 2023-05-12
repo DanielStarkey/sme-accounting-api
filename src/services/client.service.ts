@@ -5,8 +5,8 @@ import { Service } from "typedi";
 export class ClientService {
   constructor(private readonly db = new PrismaClient()) {}
 
-  create(client: Prisma.ClientCreateInput) {
-    return this.db.client.create({ data: client });
+  create(...clients: Array<Prisma.ClientCreateInput>) {
+    return this.db.client.createMany({ data: clients });
   }
 
   getAll() {

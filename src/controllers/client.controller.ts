@@ -1,36 +1,48 @@
-import { Request, Response } from "express";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UploadedFiles,
+} from "routing-controllers";
 import { Inject, Service } from "typedi";
+import csvToJson from "../common/csv-to-json";
+import { NewClientDto } from "../dto/new-client.dto";
 import { ClientService } from "../services/client.service";
 
+@Controller("/clients")
 @Service()
 export class ClientController {
   constructor(@Inject() private readonly clientService: ClientService) {}
 
-  async create(request: Request, response: Response) {
-    const data = request.body;
-
-    const client = await this.clientService.create(data);
-
-    response.json(client);
+  @Post()
+  create(@Body() client: NewClientDto) {
+    return this.clientService.create(client);
   }
 
-  async getAll(request: Request, response: Response) {
-    const clients = await this.clientService.getAll();
+  @Post("/import")
+  import(@UploadedFiles("clients") files: File[]) {
+    const clients = Object.values(files)
+      .map((file: any) => file.data.toString())
+      .flatMap((csvContent) => csvToJson<any>(csvContent));
 
-    response.json(clients);
+    return this.clientService.create(...clients);
   }
 
-  async getById(request: Request, response: Response) {
-    const client = await this.clientService.get(request.params.clientId);
-
-    response.json(client);
+  @Get()
+  getAll() {
+    return this.clientService.getAll();
   }
 
-  async delete(request: Request, response: Response) {
-    const { clientId } = request.params;
+  @Get("/:clientId")
+  getById(@Param("clientId") clientId: string) {
+    return this.clientService.get(clientId);
+  }
 
+  @Delete("/:clientId")
+  async delete(@Param("clientId") clientId: string) {
     await this.clientService.delete(clientId);
-
-    response.status(204).send();
   }
 }

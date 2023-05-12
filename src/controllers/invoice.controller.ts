@@ -1,15 +1,25 @@
-import { Request, Response } from "express";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+} from "routing-controllers";
 import { Inject, Service } from "typedi";
+import { NewInvoiceDto } from "../dto/new-invoice.dto";
 import { InvoiceService } from "../services/invoice.service";
 
+@Controller("/invoices")
 @Service()
 export class InvoiceController {
   constructor(@Inject() private readonly invoiceService: InvoiceService) {}
 
-  async create(request: Request, response: Response) {
-    const { date, amount, distance_travelled, tags, client_id } = request.body;
+  @Post()
+  create(@Body() invoice: NewInvoiceDto) {
+    const { date, amount, distance_travelled, tags, client_id } = invoice;
 
-    const invoice = await this.invoiceService.create(
+    return this.invoiceService.create(
       {
         date,
         amount,
@@ -18,27 +28,20 @@ export class InvoiceController {
       },
       client_id
     );
-
-    response.json(invoice);
   }
 
-  async getAll(request: Request, response: Response) {
-    const invoice = await this.invoiceService.getAll();
-
-    response.json(invoice);
+  @Get()
+  getAll() {
+    return this.invoiceService.getAll();
   }
 
-  async getById(request: Request, response: Response) {
-    const invoice = await this.invoiceService.get(request.params.clientId);
-
-    response.json(invoice);
+  @Get("/:invoiceId")
+  getById(@Param("invoiceId") invoiceId: string) {
+    return this.invoiceService.get(invoiceId);
   }
 
-  async delete(request: Request, response: Response) {
-    const { clientId: invoiceId } = request.params;
-
+  @Delete("/:invoiceId")
+  async delete(@Param("invoiceId") invoiceId: string) {
     await this.invoiceService.delete(invoiceId);
-
-    response.status(204).send();
   }
 }
